@@ -5,6 +5,16 @@ import heroImg from './assets/hero.png'
 import './App.css'
 
 function App() {
+  
+  return (
+    <>
+      <h1>My Job Tracker</h1>
+      <p>Welcome to my website.</p>
+    </>
+  );
+
+
+  {/*
   const [count, setCount] = useState(0)
 
   return (
@@ -116,6 +126,7 @@ function App() {
       <section id="spacer"></section>
     </>
   )
+*/}
 }
 
 export default App
