@@ -14,8 +14,22 @@ function ApplicationForm({ onClose, onSubmit }) {
 
     console.log(formData);
 
-    onSubmit(formData);
-    onClose;
+    const newApplication = {
+      id: crypto.randomUUID(),
+      ...formData
+    };
+
+    console.log(newApplication);
+    
+    onSubmit(newApplication);
+
+    setFormData({
+    company: "",
+    position: "",
+    status: "Applied"
+    });
+
+    onClose();
   }
 
   function handleChange(e) {
