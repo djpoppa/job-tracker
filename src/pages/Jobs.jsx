@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import ApplicationForm from "../components/applicationForm.jsx";
+import ApplicationCard from "../components/ApplicationCard.jsx";
 
 function Jobs() {
   const [showForm, setShowForm] = useState(false);
@@ -27,6 +28,7 @@ function Jobs() {
     ]);
   }
 
+  // delete application by recreating list filtering out the specified id
   function deleteApplication(id) {
     setApplications(
       applications.filter(
@@ -46,7 +48,7 @@ function Jobs() {
       >
         Add Application
       </button>
-
+      
       {showForm && 
         <ApplicationForm 
           onClose={() => setShowForm(false)} 
@@ -56,16 +58,14 @@ function Jobs() {
 
       <ul>
         {applications.map((app) => (
-          <li key={app.id}>
-            {app.company} - {app.position} - {app.status}
-            <button
-              onClick={() =>
-                deleteApplication(app.id)
-              }
-            >
-              Delete
-            </button>
-          </li>
+          <ul>
+            <ApplicationCard
+              key={app.id}
+              application={app}
+              onDelete={() => deleteApplication(app.id)}
+              //onEdit={/*editApplication*/}
+            /> 
+          </ul>
         ))}
       </ul>
 

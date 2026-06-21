@@ -1,0 +1,131 @@
+.ApplicationBox {
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+
+    border-radius: 14px;
+
+    width: min(700px, 92%);
+
+    margin: 1.25rem auto;
+    padding: 1.2rem 1.4rem;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    box-shadow: 0 4px 12px var(--shadow);
+
+    transition:
+        transform .2s,
+        box-shadow .2s,
+        border-color .2s;
+}
+
+.ApplicationBox:hover {
+    transform: translateY(-4px);
+
+    border-color: var(--accent);
+
+    box-shadow: 0 10px 24px var(--shadow);
+}
+
+.ApplicationInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.ApplicationInfo h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.ApplicationInfo p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: .95rem;
+}
+
+.ApplicationHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    gap: 1rem;
+}
+
+.ApplicationHeader h3 {
+    margin: 0;
+}
+
+.ApplicationActions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.ApplicationActions button {
+    border: none;
+    border-radius: 8px;
+
+    padding: .55rem 1rem;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background-color .2s,
+        transform .15s;
+}
+
+.ApplicationActions button:hover {
+    transform: translateY(-2px);
+}
+
+.ApplicationActions button:first-child {
+    background-color: var(--accent);
+    color: white;
+}
+
+.ApplicationActions button:first-child:hover {
+    background-color: var(--accent-hover);
+}
+
+.ApplicationActions button:last-child {
+    background-color: var(--danger);
+    color: white;
+}
+
+.ApplicationActions button:last-child:hover {
+    background-color: var(--danger-hover);
+}
+
+.Status {
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.Status.applied {
+    background: #2563eb22;
+    color: #3b82f6;
+}
+
+.Status.interview {
+    background: #f59e0b22;
+    color: #f59e0b;
+}
+
+.Status.offer {
+    background: #22c55e22;
+    color: #22c55e;
+}
+
+.Status.rejected {
+    background: #ef444422;
+    color: #ef4444;
+}
