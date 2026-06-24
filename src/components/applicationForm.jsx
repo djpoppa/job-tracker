@@ -1,33 +1,42 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import './applicationForm.css'
 
-function ApplicationForm({ onClose, onSubmit }) {
+function ApplicationForm({ onClose, onSubmit, editingApplication }) {
   const [formData, setFormData] = useState({
   company: "",
   position: "",
   status: "Applied"
   });
 
+  useEffect(() => {
+    if (editingApplication) {
+      setFormData({
+        company: editingApplication.company,
+        position: editingApplication.position,
+        status: editingApplication.status,
+      });
+    } else {
+      setFormData({
+        company: "",
+        position: "",
+        status: "Applied",
+      });
+    }
+  }, [editingApplication]);
+
   function handleSubmit(e) {
     e.preventDefault();
 
-    console.log(formData);
-
     const newApplication = {
-      id: crypto.randomUUID(),
+      id: editingApplication
+        ? editingApplication.id
+        : crypto.randomUUID(),
       ...formData
     };
 
-    console.log(newApplication);
     
     onSubmit(newApplication);
-
-    setFormData({
-    company: "",
-    position: "",
-    status: "Applied"
-    });
 
     onClose();
   }
@@ -48,7 +57,9 @@ function ApplicationForm({ onClose, onSubmit }) {
         className="modal"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2>Add Application</h2>
+        <h2>
+          {editingApplication ? "Edit Application" : "Add Application"}
+        </h2>
 
         <form onSubmit={handleSubmit}>
           <input
@@ -79,7 +90,7 @@ function ApplicationForm({ onClose, onSubmit }) {
           </select>
 
           <button type="submit">
-            Save
+            {editingApplication ? "Update" : "Save"}
           </button>
 
           <button
