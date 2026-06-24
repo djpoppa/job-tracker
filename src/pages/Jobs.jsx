@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import ApplicationForm from "../components/applicationForm.jsx";
 import ApplicationCard from "../components/ApplicationCard.jsx";
 
+import './Jobs.css';
+
 function Jobs() {
   const [showForm, setShowForm] = useState(false);
   // use local storage when retrieving applications
@@ -11,6 +13,7 @@ function Jobs() {
       ? JSON.parse(saved)
       : [];
   });
+  const [editingApplication, setEditingApplication] = useState(null);
   
   // keep local storage up to date with applications list
   useEffect(() => {
@@ -20,14 +23,6 @@ function Jobs() {
     );
   }, [applications]);
 
-  // add new application by recreating list with new application appended
-  function addApplication(newApplication) {
-    setApplications([
-      ...applications,
-      newApplication
-    ]);
-  }
-
   // delete application by recreating list filtering out the specified id
   function deleteApplication(id) {
     setApplications(
@@ -35,6 +30,32 @@ function Jobs() {
         (app) => app.id !== id
       )
     );
+  }
+
+  // add application if new or replace application if exists
+  function saveApplication(application) {
+    setApplications(prev => {
+        const exists = prev.some(a => a.id === application.id);
+
+        if (exists) {
+            return prev.map(a =>
+                a.id === application.id ? application : a
+            );
+        }
+
+        return [...prev, application];
+    });
+  }
+
+  function editApplication(application) {
+    setShowForm(true);
+    setEditingApplication(application);
+
+  }
+
+  function closeForm() {
+    setShowForm(false);
+    setEditingApplication(null);
   }
   
 
@@ -51,21 +72,20 @@ function Jobs() {
       
       {showForm && 
         <ApplicationForm 
-          onClose={() => setShowForm(false)} 
-          onSubmit={addApplication}
+          onClose={closeForm} 
+          onSubmit={saveApplication}
+          editingApplication={editingApplication}
         />
       }
 
       <ul>
         {applications.map((app) => (
-          <ul>
-            <ApplicationCard
-              key={app.id}
-              application={app}
-              onDelete={() => deleteApplication(app.id)}
-              //onEdit={/*editApplication*/}
-            /> 
-          </ul>
+          <ApplicationCard
+            key={app.id}
+            application={app}
+            onDelete={() => deleteApplication(app.id)}
+            onEdit={() => editApplication(app)}
+          /> 
         ))}
       </ul>
 
