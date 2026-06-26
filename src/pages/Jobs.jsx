@@ -64,7 +64,7 @@ function Jobs() {
       <h1>Applications</h1>
       <button
         onClick={() =>
-          setShowForm(!showForm)
+          setShowForm(true)
         }
       >
         Add Application
@@ -78,16 +78,26 @@ function Jobs() {
         />
       }
 
-      <ul>
-        {applications.map((app) => (
-          <ApplicationCard
-            key={app.id}
-            application={app}
-            onDelete={() => deleteApplication(app.id)}
-            onEdit={() => editApplication(app)}
-          /> 
-        ))}
-      </ul>
+      {applications.length === 0 ? (
+        <div className="EmptyState">
+          <h2>No applications yet.</h2>
+          <p>Click the button below to add your first application.</p>
+          <button onClick={() => setShowForm(true)}>
+            Add Application
+          </button>
+        </div>
+      ) : (
+        <div className="ApplicationList">
+          {applications.map((app) => (
+            <ApplicationCard
+              key={app.id}
+              application={app}
+              onDelete={() => deleteApplication(app.id)}
+              onEdit={() => editApplication(app)}
+            /> 
+          ))}
+        </div>
+      )}  
 
     </>
     );
