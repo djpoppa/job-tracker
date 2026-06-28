@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route } from "react-router-dom";
 // import { useState, useEffect } from 'react'
 
 import Header from "./components/Header";
@@ -14,7 +14,7 @@ function App() {
   
   return (
     <div className="app">
-      <BrowserRouter>
+      <HashRouter>
       
       <Header />
 
@@ -28,7 +28,7 @@ function App() {
 
       </main>
       
-    </BrowserRouter>
+    </HashRouter>
 
 
     </div>
