@@ -1,0 +1,19 @@
+.Button {
+    display: inline-block;
+
+    padding: 0.75rem 1.5rem;
+
+    background: var(--accent);
+    color: white;
+
+    border-radius: 8px;
+
+    text-decoration: none;
+    font-weight: 600;
+
+    transition: background-color 0.2s;
+}
+
+.Button:hover {
+    background: var(--accent-hover);
+}
