@@ -6,7 +6,7 @@ This project was created to strengthen my React skills while building a practica
 
 ## Live Demo
 
-[View the Job Tracker](https://djpoppa.github.io/job-tracker/)
+[https://djpoppa.github.io/job-tracker/](https://djpoppa.github.io/job-tracker/)
 
 ## Features
 
