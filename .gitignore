@@ -1,3 +1,7 @@
+# -----------------------------
+# Frontend (Vite / React)
+# -----------------------------
+
 # Logs
 logs
 *.log
@@ -7,18 +11,70 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+
+# Build output
 dist
 dist-ssr
+
+# Local environment files
 *.local
 
-# Editor directories and files
+# -----------------------------
+# Backend (Spring Boot / Maven)
+# -----------------------------
+
+# Maven build output
+backend/target/
+
+# Keep wrapper JAR tracked
+!backend/.mvn/wrapper/maven-wrapper.jar
+
+# Ignore nested target folders except source directories
+!backend/**/src/main/**/target/
+!backend/**/src/test/**/target/
+
+# NetBeans build output
+backend/build/
+!backend/**/src/main/**/build/
+!backend/**/src/test/**/build/
+
+# -----------------------------
+# IDEs
+# -----------------------------
+
+# VS Code
 .vscode/*
 !.vscode/extensions.json
+
+# IntelliJ IDEA
 .idea
-.DS_Store
+*.iws
+*.iml
+*.ipr
+
+# Eclipse / Spring Tools Suite
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+# Visual Studio
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
+
+# -----------------------------
+# OS files
+# -----------------------------
+
+.DS_Store
+Thumbs.db
+
+# Vim
 *.sw?
