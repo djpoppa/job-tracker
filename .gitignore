@@ -40,6 +40,9 @@ backend/build/
 !backend/**/src/main/**/build/
 !backend/**/src/test/**/build/
 
+# Ignore local environment files
+backend/src/main/resources/application-local.properties
+
 # -----------------------------
 # IDEs
 # -----------------------------
