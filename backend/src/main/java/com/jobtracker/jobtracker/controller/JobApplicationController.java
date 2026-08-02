@@ -3,6 +3,7 @@ package com.jobtracker.jobtracker.controller;
 import com.jobtracker.jobtracker.model.JobApplication;
 import com.jobtracker.jobtracker.service.JobApplicationService;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -22,7 +23,20 @@ public class JobApplicationController {
     }
 
     @PostMapping
-    public JobApplication createApplication(@RequestBody JobApplication application) {
+    public JobApplication createApplication(@Valid @RequestBody JobApplication application) {
         return service.createApplication(application);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteApplication(@PathVariable Long id) {
+        service.deleteApplication(id);
+    }
+
+    @PutMapping("/{id}")
+    public JobApplication updateApplication(
+            @PathVariable Long id,
+            @Valid @RequestBody JobApplication application) {
+
+        return service.updateApplication(id, application);
     }
 }

@@ -31,4 +31,17 @@ public class JobApplicationService {
     public void deleteApplication(Long id) {
         repository.deleteById(id);
     }
+
+    public JobApplication updateApplication(Long id, JobApplication updatedApplication) {
+
+        return repository.findById(id)
+            .map(application -> {
+                application.setCompany(updatedApplication.getCompany());
+                application.setPosition(updatedApplication.getPosition());
+                application.setStatus(updatedApplication.getStatus());
+
+                return repository.save(application);
+            })
+            .orElseThrow(() -> new RuntimeException("Application not found"));
+    }
 }
