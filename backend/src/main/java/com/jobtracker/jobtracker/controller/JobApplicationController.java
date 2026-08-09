@@ -3,6 +3,7 @@ package com.jobtracker.jobtracker.controller;
 import com.jobtracker.jobtracker.model.JobApplication;
 import com.jobtracker.jobtracker.service.JobApplicationService;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
 import jakarta.validation.Valid;
 
 import java.util.List;
@@ -28,8 +29,9 @@ public class JobApplicationController {
     }
 
     @DeleteMapping("/{id}")
-    public void deleteApplication(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteApplication(@PathVariable Long id) {
         service.deleteApplication(id);
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}")

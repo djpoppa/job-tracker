@@ -126,10 +126,10 @@ class JobApplicationControllerTest {
     }
 
     @Test
-    void deleteApplicationReturnsOk() throws Exception {
+    void deleteApplicationReturnsNoContent() throws Exception {
         doNothing().when(service).deleteApplication(1L);
 
         mockMvc.perform(delete("/applications/1"))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
     }
 }
