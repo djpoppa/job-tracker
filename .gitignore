@@ -20,6 +20,9 @@ dist-ssr
 
 # Local environment files
 *.local
+.env.development
+.env.test
+.env.*.local
 
 # -----------------------------
 # Backend (Spring Boot / Maven)

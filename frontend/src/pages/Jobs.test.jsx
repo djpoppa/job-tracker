@@ -1,10 +1,25 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import Jobs from './Jobs';
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import Jobs from "./Jobs";
+
+import {
+  apiGetApplications,
+  apiDeleteApplication,
+  apiUpdateApplication,
+  apiCreateApplication,
+} from "../api/applications";
+
+// Mock API functions
+vi.mock("../api/applications", () => ({
+  apiGetApplications: vi.fn(),
+  apiDeleteApplication: vi.fn(),
+  apiUpdateApplication: vi.fn(),
+  apiCreateApplication: vi.fn(),
+}));
 
 // Mock child components
-vi.mock('../components/applicationForm.jsx', () => ({
+vi.mock("../components/applicationForm.jsx", () => ({
   default: ({ onClose, onSubmit, editingApplication }) => (
     <div data-testid="application-form">
       <button onClick={onClose}>
@@ -14,9 +29,9 @@ vi.mock('../components/applicationForm.jsx', () => ({
       <button
         onClick={() =>
           onSubmit({
-            id: editingApplication?.id ?? 1,
-            name: 'Test App',
-            company: 'Test Company',
+            company: "Test Company",
+            position: "Test Position",
+            status: "Applied",
           })
         }
       >
@@ -32,10 +47,10 @@ vi.mock('../components/applicationForm.jsx', () => ({
   ),
 }));
 
-vi.mock('../components/ApplicationCard.jsx', () => ({
+vi.mock("../components/ApplicationCard.jsx", () => ({
   default: ({ application, onDelete, onEdit }) => (
     <div data-testid={`application-${application.id}`}>
-      <span>{application.name}</span>
+      {application.company}
 
       <button onClick={onDelete}>
         Delete
@@ -48,16 +63,18 @@ vi.mock('../components/ApplicationCard.jsx', () => ({
   ),
 }));
 
-describe('Jobs Component', () => {
+describe("Jobs Component", () => {
   beforeEach(() => {
-    localStorage.clear();
+    vi.clearAllMocks();
+
+    apiGetApplications.mockResolvedValue([]);
   });
 
   const openApplicationForm = async () => {
     const user = userEvent.setup();
 
     await user.click(
-      screen.getAllByRole('button', {
+      screen.getAllByRole("button", {
         name: /add application/i,
       })[0]
     );
@@ -65,235 +82,275 @@ describe('Jobs Component', () => {
     return user;
   };
 
-  it('renders the Jobs page', () => {
+  it("renders the Jobs page", async () => {
     render(<Jobs />);
 
     expect(
-      screen.getByText('Applications')
+      screen.getByText("Applications")
     ).toBeInTheDocument();
 
     expect(
-      screen.getAllByRole('button', {
+      screen.getAllByRole("button", {
         name: /add application/i,
       }).length
     ).toBeGreaterThan(0);
+
+    await waitFor(() => {
+      expect(apiGetApplications).toHaveBeenCalledTimes(1);
+    });
   });
 
+  it("shows empty state when there are no applications", async () => {
+    apiGetApplications.mockResolvedValue([]);
 
-  it('shows empty state when there are no applications', () => {
     render(<Jobs />);
 
     expect(
-      screen.getByText('No applications yet.')
+      await screen.findByText("No applications yet.")
     ).toBeInTheDocument();
   });
 
+  it("loads applications from the API", async () => {
+    apiGetApplications.mockResolvedValue([
+      {
+        id: 1,
+        company: "Company A",
+        position: "Developer",
+        status: "Applied",
+      },
+      {
+        id: 2,
+        company: "Company B",
+        position: "Engineer",
+        status: "Interview",
+      },
+    ]);
 
-  it('opens the application form', async () => {
+    render(<Jobs />);
+
+    expect(
+      await screen.findByText("Company A")
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByText("Company B")
+    ).toBeInTheDocument();
+
+    expect(apiGetApplications).toHaveBeenCalledTimes(1);
+  });
+
+  it("opens the application form", async () => {
     render(<Jobs />);
 
     await openApplicationForm();
 
     expect(
-      screen.getByTestId('application-form')
+      screen.getByTestId("application-form")
     ).toBeInTheDocument();
   });
 
-
-  it('closes the application form', async () => {
+  it("closes the application form", async () => {
     render(<Jobs />);
 
     const user = await openApplicationForm();
 
     await user.click(
-      screen.getByRole('button', {
-        name: 'Close',
+      screen.getByRole("button", {
+        name: "Close",
       })
     );
 
     expect(
-      screen.queryByTestId('application-form')
+      screen.queryByTestId("application-form")
     ).not.toBeInTheDocument();
   });
 
+  it("creates a new application", async () => {
+    const createdApplication = {
+      id: 1,
+      company: "Test Company",
+      position: "Test Position",
+      status: "Applied",
+    };
 
-  it('adds a new application', async () => {
+    apiCreateApplication.mockResolvedValue(
+      createdApplication
+    );
+
     render(<Jobs />);
 
     const user = await openApplicationForm();
 
     await user.click(
-      screen.getByRole('button', {
-        name: 'Submit',
+      screen.getByRole("button", {
+        name: "Submit",
       })
     );
 
+    await waitFor(() => {
+      expect(apiCreateApplication).toHaveBeenCalledWith({
+        company: "Test Company",
+        position: "Test Position",
+        status: "Applied",
+      });
+    });
+
     expect(
-      screen.getByText('Test App')
+      await screen.findByText("Test Company")
     ).toBeInTheDocument();
-
-    const savedApplications = JSON.parse(
-      localStorage.getItem('applications')
-    );
-
-    expect(savedApplications).toHaveLength(1);
-    expect(savedApplications[0].company)
-      .toBe('Test Company');
   });
 
+  it("deletes an application", async () => {
+    apiGetApplications.mockResolvedValue([
+      {
+        id: 1,
+        company: "Company A",
+        position: "Developer",
+        status: "Applied",
+      },
+    ]);
 
-  it('loads applications from localStorage', () => {
-    localStorage.setItem(
-      'applications',
-      JSON.stringify([
-        {
-          id: 1,
-          name: 'Company A',
-          company: 'A Corp',
-        },
-        {
-          id: 2,
-          name: 'Company B',
-          company: 'B Corp',
-        },
-      ])
-    );
+    apiDeleteApplication.mockResolvedValue();
 
     render(<Jobs />);
 
     expect(
-      screen.getByText('Company A')
+      await screen.findByText("Company A")
     ).toBeInTheDocument();
-
-    expect(
-      screen.getByText('Company B')
-    ).toBeInTheDocument();
-  });
-
-
-  it('deletes an application', async () => {
-    localStorage.setItem(
-      'applications',
-      JSON.stringify([
-        {
-          id: 1,
-          name: 'Company A',
-          company: 'A Corp',
-        },
-      ])
-    );
-
-    render(<Jobs />);
 
     const user = userEvent.setup();
 
     await user.click(
-      screen.getByRole('button', {
-        name: 'Delete',
+      screen.getByRole("button", {
+        name: "Delete",
       })
     );
 
+    await waitFor(() => {
+      expect(apiDeleteApplication).toHaveBeenCalledWith(1);
+    });
+
     expect(
-      screen.queryByText('Company A')
+      screen.queryByText("Company A")
     ).not.toBeInTheDocument();
-
-    const savedApplications = JSON.parse(
-      localStorage.getItem('applications')
-    );
-
-    expect(savedApplications).toHaveLength(0);
   });
 
-
-  it('opens edit mode for an application', async () => {
-    localStorage.setItem(
-      'applications',
-      JSON.stringify([
-        {
-          id: 1,
-          name: 'Company A',
-          company: 'A Corp',
-        },
-      ])
-    );
+  it("opens edit mode for an application", async () => {
+    apiGetApplications.mockResolvedValue([
+      {
+        id: 1,
+        company: "Company A",
+        position: "Developer",
+        status: "Applied",
+      },
+    ]);
 
     render(<Jobs />);
+
+    expect(
+      await screen.findByText("Company A")
+    ).toBeInTheDocument();
 
     const user = userEvent.setup();
 
     await user.click(
-      screen.getByRole('button', {
-        name: 'Edit',
+      screen.getByRole("button", {
+        name: "Edit",
       })
     );
 
     expect(
-      screen.getByTestId('editing-mode')
+      screen.getByTestId("editing-mode")
     ).toBeInTheDocument();
   });
 
+  it("updates an application when editing", async () => {
+    const existingApplication = {
+      id: 1,
+      company: "Company A",
+      position: "Developer",
+      status: "Applied",
+    };
 
-  it('updates an application when editing', async () => {
-    localStorage.setItem(
-      'applications',
-      JSON.stringify([
-        {
-          id: 1,
-          name: 'Company A',
-          company: 'A Corp',
-        },
-      ])
+    const updatedApplication = {
+      id: 1,
+      company: "Test Company",
+      position: "Test Position",
+      status: "Applied",
+    };
+
+    apiGetApplications.mockResolvedValue([
+      existingApplication,
+    ]);
+
+    apiUpdateApplication.mockResolvedValue(
+      updatedApplication
     );
 
     render(<Jobs />);
 
+    expect(
+      await screen.findByText("Company A")
+    ).toBeInTheDocument();
+
     const user = userEvent.setup();
 
     await user.click(
-      screen.getByRole('button', {
-        name: 'Edit',
+      screen.getByRole("button", {
+        name: "Edit",
       })
     );
 
     await user.click(
-      screen.getByRole('button', {
-        name: 'Submit',
+      screen.getByRole("button", {
+        name: "Submit",
       })
     );
 
-    const savedApplications = JSON.parse(
-      localStorage.getItem('applications')
-    );
+    await waitFor(() => {
+      expect(apiUpdateApplication).toHaveBeenCalledWith(
+        1,
+        {
+          company: "Test Company",
+          position: "Test Position",
+          status: "Applied",
+        }
+      );
+    });
 
-    expect(savedApplications).toHaveLength(1);
-    expect(savedApplications[0].id).toBe(1);
+    expect(
+      await screen.findByText("Test Company")
+    ).toBeInTheDocument();
   });
 
+  it("shows empty state after deleting the last application", async () => {
+    apiGetApplications.mockResolvedValue([
+      {
+        id: 1,
+        company: "Company A",
+        position: "Developer",
+        status: "Applied",
+      },
+    ]);
 
-  it('shows empty state after deleting the last application', async () => {
-    localStorage.setItem(
-      'applications',
-      JSON.stringify([
-        {
-          id: 1,
-          name: 'Company A',
-          company: 'A Corp',
-        },
-      ])
-    );
+    apiDeleteApplication.mockResolvedValue();
 
     render(<Jobs />);
+
+    expect(
+      await screen.findByText("Company A")
+    ).toBeInTheDocument();
 
     const user = userEvent.setup();
 
     await user.click(
-      screen.getByRole('button', {
-        name: 'Delete',
+      screen.getByRole("button", {
+        name: "Delete",
       })
     );
 
     expect(
-      screen.getByText('No applications yet.')
+      await screen.findByText("No applications yet.")
     ).toBeInTheDocument();
   });
 });
