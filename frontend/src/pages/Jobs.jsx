@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
     apiGetApplications,
     apiDeleteApplication,
@@ -15,22 +15,32 @@ function Jobs() {
     const [editingApplication, setEditingApplication] = useState(null);
     const [error, setError] = useState(null);
     const [applications, setApplications] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    const loadApplications = useCallback(async () => {
+        try {
+            const data = await apiGetApplications();
+            setApplications(data);
+            setError(null);
+        } catch (error) {
+            console.error("Error fetching applications:", error);
+            setError("Unable to connect to the application server. Please try again in a moment.");
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
 
     // Fetch applications from backend on component mount
     useEffect(() => {
-        async function loadApplications() {
-            try {
-                const data = await apiGetApplications();
-                setApplications(data);
-                setError(null);
-            } catch (error) {
-                console.error("Error fetching applications:", error);
-                setError("Unable to connect to the application server. Please try again in a moment.");
-            }
-        }
-
+        // State changes occur only after the asynchronous API request settles.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         loadApplications();
-    }, []);
+    }, [loadApplications]);
+
+    function retryLoadingApplications() {
+        setIsLoading(true);
+        loadApplications();
+    }
 
     // Delete application
     async function deleteApplication(id) {
@@ -97,9 +107,11 @@ function Jobs() {
         <>
             <h1>Applications</h1>
 
-            <button onClick={() => setShowForm(true)}>
-                Add Application
-            </button>
+            {!error && (
+                <button onClick={() => setShowForm(true)}>
+                    Add Application
+                </button>
+            )}
 
             {showForm && (
                 <ApplicationForm
@@ -109,10 +121,20 @@ function Jobs() {
                 />
             )}
 
-            {error ? (
+            {isLoading ? (
+                <div
+                    className="LoadingState"
+                    role="status"
+                    aria-label="Loading applications"
+                >
+                    <h2>Loading applications...</h2>
+                    <p>The application server may take a moment to start.</p>
+                </div>
+            ) : error ? (
                 <div className="ErrorState">
                     <h2>Something went wrong</h2>
                     <p>{error}</p>
+                    <button onClick={retryLoadingApplications}>Retry</button>
                 </div>
             ) : applications.length === 0 ? (
                 <div className="EmptyState">
