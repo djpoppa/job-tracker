@@ -110,6 +110,53 @@ describe("Jobs Component", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows a loading state until applications have loaded", async () => {
+    let resolveApplications;
+    apiGetApplications.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveApplications = resolve;
+      })
+    );
+
+    render(<Jobs />);
+
+    expect(
+      screen.getByRole("status", { name: /loading applications/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("No applications yet.")
+    ).not.toBeInTheDocument();
+
+    resolveApplications([]);
+
+    expect(
+      await screen.findByText("No applications yet.")
+    ).toBeInTheDocument();
+  });
+
+  it("hides Add Application after a loading error and retries the request", async () => {
+    apiGetApplications
+      .mockRejectedValueOnce(new Error("Server unavailable"))
+      .mockResolvedValueOnce([]);
+
+    render(<Jobs />);
+
+    expect(
+      await screen.findByText("Something went wrong")
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /add application/i })
+    ).not.toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Retry" }));
+
+    expect(
+      await screen.findByText("No applications yet.")
+    ).toBeInTheDocument();
+    expect(apiGetApplications).toHaveBeenCalledTimes(2);
+  });
+
   it("loads applications from the API", async () => {
     apiGetApplications.mockResolvedValue([
       {
