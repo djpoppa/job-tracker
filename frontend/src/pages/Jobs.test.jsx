@@ -72,11 +72,12 @@ describe("Jobs Component", () => {
 
   const openApplicationForm = async () => {
     const user = userEvent.setup();
+    const addApplicationButtons = await screen.findAllByRole("button", {
+      name: /add application/i,
+    });
 
     await user.click(
-      screen.getAllByRole("button", {
-        name: /add application/i,
-      })[0]
+      addApplicationButtons[0]
     );
 
     return user;
@@ -90,10 +91,10 @@ describe("Jobs Component", () => {
     ).toBeInTheDocument();
 
     expect(
-      screen.getAllByRole("button", {
+      await screen.findAllByRole("button", {
         name: /add application/i,
-      }).length
-    ).toBeGreaterThan(0);
+      })
+    ).not.toHaveLength(0);
 
     await waitFor(() => {
       expect(apiGetApplications).toHaveBeenCalledTimes(1);
@@ -125,6 +126,9 @@ describe("Jobs Component", () => {
     ).toBeInTheDocument();
     expect(
       screen.queryByText("No applications yet.")
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /add application/i })
     ).not.toBeInTheDocument();
 
     resolveApplications([]);

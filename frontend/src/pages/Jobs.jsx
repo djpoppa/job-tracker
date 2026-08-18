@@ -107,7 +107,7 @@ function Jobs() {
         <>
             <h1>Applications</h1>
 
-            {!error && (
+            {!isLoading && !error && (
                 <button onClick={() => setShowForm(true)}>
                     Add Application
                 </button>
