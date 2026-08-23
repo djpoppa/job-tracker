@@ -32,8 +32,10 @@ public final class SpaCsrfTokenRequestHandler
         CsrfToken token = deferredCsrfToken.get();
 
         /*
-         * Expose the token through the normal request attributes.
+         * Make the token available through all of the standard
+         * request attributes used by Spring Security / Spring MVC.
          */
+        request.setAttribute(CsrfToken.class.getName(), token);
         request.setAttribute(token.getParameterName(), token);
         request.setAttribute(token.getHeaderName(), token);
     }
@@ -43,11 +45,12 @@ public final class SpaCsrfTokenRequestHandler
             HttpServletRequest request,
             CsrfToken csrfToken) {
 
-        String headerValue = request.getHeader(csrfToken.getHeaderName());
+        String headerValue =
+                request.getHeader(csrfToken.getHeaderName());
 
         /*
-         * React sends the raw token from the XSRF-TOKEN cookie,
-         * so use the plain resolver for header values.
+         * React sends the raw token in the X-XSRF-TOKEN header,
+         * so use the plain resolver for that header.
          */
         if (headerValue != null && !headerValue.isBlank()) {
             return plain.resolveCsrfTokenValue(request, csrfToken);

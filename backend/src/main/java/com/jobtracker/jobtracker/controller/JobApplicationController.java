@@ -33,9 +33,6 @@ public class JobApplicationController {
             @AuthenticationPrincipal AuthenticatedUser user,
             @Valid @RequestBody JobApplication application) {
 
-            System.out.println("CREATE USER = " + user);
-            System.out.println("CREATE USER ID = " + user.id());
-
         return service.createApplication(user.id(), application);
     }
 
