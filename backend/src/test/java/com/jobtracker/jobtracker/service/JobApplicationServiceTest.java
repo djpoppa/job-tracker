@@ -1,7 +1,10 @@
 package com.jobtracker.jobtracker.service;
 
 import com.jobtracker.jobtracker.model.JobApplication;
+import com.jobtracker.jobtracker.model.User;
 import com.jobtracker.jobtracker.repository.JobApplicationRepository;
+import jakarta.persistence.EntityManager;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,84 +23,101 @@ class JobApplicationServiceTest {
     @Mock
     private JobApplicationRepository repository;
 
+    @Mock
+    private EntityManager entityManager;
+
+    @Mock
+    private User user;
+
     @InjectMocks
     private JobApplicationService service;
 
     @Test
-    void getAllApplicationsReturnsApplications() {
+    void getAllApplicationsReturnsApplicationsForUser() {
         JobApplication application = createApplication(
                 "Google",
                 "Software Engineer",
                 "Applied"
         );
 
-        when(repository.findAll()).thenReturn(List.of(application));
+        when(repository.findByUserId(1L))
+                .thenReturn(List.of(application));
 
-        List<JobApplication> result = service.getAllApplications();
+        List<JobApplication> result = service.getAllApplications(1L);
 
         assertEquals(1, result.size());
         assertEquals("Google", result.get(0).getCompany());
         assertEquals("Software Engineer", result.get(0).getPosition());
         assertEquals("Applied", result.get(0).getStatus());
 
-        verify(repository).findAll();
+        verify(repository).findByUserId(1L);
     }
 
     @Test
-    void getApplicationByIdReturnsApplication() {
-        JobApplication application = createApplication(
-                "Microsoft",
-                "Backend Developer",
-                "Applied"
-        );
+    void getAllApplicationsReturnsEmptyListWhenUserHasNoApplications() {
+        when(repository.findByUserId(1L))
+                .thenReturn(List.of());
 
-        when(repository.findById(1L)).thenReturn(Optional.of(application));
-
-        Optional<JobApplication> result = service.getApplicationById(1L);
-
-        assertTrue(result.isPresent());
-        assertEquals("Microsoft", result.get().getCompany());
-
-        verify(repository).findById(1L);
-    }
-
-    @Test
-    void getApplicationByIdReturnsEmptyWhenApplicationDoesNotExist() {
-        when(repository.findById(999L)).thenReturn(Optional.empty());
-
-        Optional<JobApplication> result = service.getApplicationById(999L);
+        List<JobApplication> result = service.getAllApplications(1L);
 
         assertTrue(result.isEmpty());
 
-        verify(repository).findById(999L);
+        verify(repository).findByUserId(1L);
     }
 
     @Test
-    void createApplicationSavesAndReturnsApplication() {
+    void createApplicationAssociatesApplicationWithUserAndSaves() {
         JobApplication application = createApplication(
                 "Amazon",
                 "Software Engineer",
                 "Applied"
         );
 
-        when(repository.save(application)).thenReturn(application);
+        when(entityManager.getReference(User.class, 1L))
+                .thenReturn(user);
 
-        JobApplication result = service.createApplication(application);
+        when(repository.save(application))
+                .thenReturn(application);
+
+        JobApplication result =
+                service.createApplication(1L, application);
 
         assertSame(application, result);
+        assertSame(user, application.getUser());
 
+        verify(entityManager).getReference(User.class, 1L);
         verify(repository).save(application);
     }
 
     @Test
-    void deleteApplicationDeletesApplication() {
-        service.deleteApplication(1L);
+    void deleteApplicationDeletesApplicationBelongingToUser() {
+        when(repository.deleteByIdAndUserId(1L, 1L))
+                .thenReturn(1);
 
-        verify(repository).deleteById(1L);
+        assertDoesNotThrow(() ->
+                service.deleteApplication(1L, 1L)
+        );
+
+        verify(repository).deleteByIdAndUserId(1L, 1L);
     }
 
     @Test
-    void updateApplicationUpdatesExistingApplication() {
+    void deleteApplicationThrowsExceptionWhenApplicationDoesNotBelongToUser() {
+        when(repository.deleteByIdAndUserId(1L, 2L))
+                .thenReturn(0);
+
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> service.deleteApplication(2L, 1L)
+        );
+
+        assertEquals("Application not found", exception.getMessage());
+
+        verify(repository).deleteByIdAndUserId(1L, 2L);
+    }
+
+    @Test
+    void updateApplicationUpdatesApplicationBelongingToUser() {
         JobApplication existingApplication = createApplication(
                 "Google",
                 "Software Engineer",
@@ -110,43 +130,50 @@ class JobApplicationServiceTest {
                 "Interview"
         );
 
-        when(repository.findById(1L))
+        when(repository.findByIdAndUserId(1L, 1L))
                 .thenReturn(Optional.of(existingApplication));
 
         when(repository.save(existingApplication))
                 .thenReturn(existingApplication);
 
         JobApplication result =
-                service.updateApplication(1L, updatedApplication);
+                service.updateApplication(
+                        1L,
+                        1L,
+                        updatedApplication
+                );
 
         assertEquals("Microsoft", result.getCompany());
         assertEquals("Backend Developer", result.getPosition());
         assertEquals("Interview", result.getStatus());
 
-        verify(repository).findById(1L);
+        verify(repository).findByIdAndUserId(1L, 1L);
         verify(repository).save(existingApplication);
     }
 
     @Test
-    void updateApplicationThrowsExceptionWhenApplicationDoesNotExist() {
-        when(repository.findById(999L))
+    void updateApplicationThrowsExceptionWhenApplicationDoesNotBelongToUser() {
+        JobApplication updatedApplication = createApplication(
+                "Google",
+                "Software Engineer",
+                "Applied"
+        );
+
+        when(repository.findByIdAndUserId(1L, 2L))
                 .thenReturn(Optional.empty());
 
         RuntimeException exception = assertThrows(
                 RuntimeException.class,
                 () -> service.updateApplication(
-                        999L,
-                        createApplication(
-                                "Google",
-                                "Software Engineer",
-                                "Applied"
-                        )
+                        2L,
+                        1L,
+                        updatedApplication
                 )
         );
 
         assertEquals("Application not found", exception.getMessage());
 
-        verify(repository).findById(999L);
+        verify(repository).findByIdAndUserId(1L, 2L);
         verify(repository, never()).save(any(JobApplication.class));
     }
 

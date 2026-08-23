@@ -24,7 +24,9 @@ public class CorsConfig {
                                 "PUT",
                                 "DELETE",
                                 "OPTIONS"
-                        );
+                        )
+                        .allowedHeaders("*")
+                        .allowCredentials(true);
             }
         };
     }
