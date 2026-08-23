@@ -1,17 +1,34 @@
 const API_URL = import.meta.env.VITE_API_URL;
 
-function getCsrfToken() {
-    const cookie = document.cookie
-        .split("; ")
-        .find(row => row.startsWith("XSRF-TOKEN="));
+let csrfToken = null;
 
-    if (!cookie) {
-        return null;
+async function getCsrfToken() {
+    if (csrfToken) {
+        return csrfToken;
     }
 
-    return decodeURIComponent(
-        cookie.substring("XSRF-TOKEN=".length)
-    );
+    const response = await fetch(`${API_URL}/auth/csrf`, {
+        method: "GET",
+        credentials: "include",
+    });
+
+    if (!response.ok) {
+        throw new Error(
+            `Unable to obtain CSRF token: ${response.status}`
+        );
+    }
+
+    const text = await response.text();
+
+    if (!text) {
+        throw new Error("CSRF endpoint returned an empty response");
+    }
+
+    const data = JSON.parse(text);
+
+    csrfToken = data.token;
+
+    return csrfToken;
 }
 
 export async function apiRequest(endpoint, options = {}) {
@@ -23,15 +40,12 @@ export async function apiRequest(endpoint, options = {}) {
         endpoint === "/auth/login" ||
         endpoint === "/auth/register";
 
-    if (
-        !isAuthRequest &&
-        !["GET", "HEAD", "OPTIONS"].includes(method)
-    ) {
-        const csrfToken = getCsrfToken();
+    const isSafeMethod = ["GET", "HEAD", "OPTIONS"].includes(method);
 
-        if (csrfToken) {
-            headers.set("X-XSRF-TOKEN", csrfToken);
-        }
+    if (!isAuthRequest && !isSafeMethod) {
+        const token = await getCsrfToken();
+
+        headers.set("X-XSRF-TOKEN", token);
     }
 
     const response = await fetch(`${API_URL}${endpoint}`, {

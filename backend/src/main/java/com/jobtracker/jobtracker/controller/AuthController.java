@@ -6,6 +6,9 @@ import com.jobtracker.jobtracker.model.User;
 import com.jobtracker.jobtracker.repository.UserRepository;
 import com.jobtracker.jobtracker.security.AuthenticatedUser;
 import com.jobtracker.jobtracker.service.JwtService;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -16,6 +19,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.web.csrf.CsrfToken;
 
 import java.time.Duration;
 
@@ -132,5 +136,10 @@ public class AuthController {
         }
 
         return ResponseEntity.ok(user);
-        }  
+        }
+
+        @GetMapping("/csrf")
+        public CsrfToken csrf(CsrfToken csrfToken) {
+        return csrfToken;
+        }
 }

@@ -68,7 +68,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/auth/register",
                                 "/auth/login",
-                                "/auth/me"
+                                "/auth/me",
+                                "/auth/csrf"
                         )
                         .permitAll()
                         .anyRequest()
