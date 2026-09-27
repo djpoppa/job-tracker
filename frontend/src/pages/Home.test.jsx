@@ -1,7 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Home from './Home';
+
+vi.mock('../auth/AuthContext', () => ({
+  useAuth: vi.fn(),
+}));
+
+import { useAuth } from '../auth/AuthContext';
 
 const renderHome = () => {
   render(
@@ -12,6 +18,13 @@ const renderHome = () => {
 };
 
 describe('Home Component', () => {
+  beforeEach(() => {
+    useAuth.mockReturnValue({
+      user: null,
+      loading: false,
+    });
+  });
+
   it('renders the page heading', () => {
     renderHome();
 
@@ -48,7 +61,29 @@ describe('Home Component', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders a link to the jobs page', () => {
+  it('shows a login link when the user is not logged in', () => {
+    renderHome();
+
+    const link = screen.getByRole('link', {
+      name: /log in/i,
+    });
+
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute('href', '/login');
+
+    expect(
+      screen.queryByRole('link', {
+        name: /view applications/i,
+      })
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows a link to the jobs page when the user is logged in', () => {
+    useAuth.mockReturnValue({
+      user: { id: 1, email: 'test@example.com' },
+      loading: false,
+    });
+
     renderHome();
 
     const link = screen.getByRole('link', {
@@ -57,5 +92,38 @@ describe('Home Component', () => {
 
     expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute('href', '/jobs');
+
+    expect(
+      screen.queryByRole('link', {
+        name: /log in/i,
+      })
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows a loading button while authentication is loading', () => {
+    useAuth.mockReturnValue({
+      user: null,
+      loading: true,
+    });
+
+    renderHome();
+
+    expect(
+      screen.getByRole('button', {
+        name: /loading/i,
+      })
+    ).toBeInTheDocument();
+
+    expect(
+      screen.queryByRole('link', {
+        name: /log in/i,
+      })
+    ).not.toBeInTheDocument();
+
+    expect(
+      screen.queryByRole('link', {
+        name: /view applications/i,
+      })
+    ).not.toBeInTheDocument();
   });
 });
